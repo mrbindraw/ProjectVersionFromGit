@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "ProjectVersionFromGit",
+	"Description": "Set version for project from git tag format MAJOR.MINOR.PATCH also set branch name, commit hash and datetime build",
+	"Category": "Source Control",
+	"CreatedBy": "Andrew Bindraw",
+	"CreatedByURL": "https://github.com/mrbindraw",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "ProjectVersionFromGit",
+			"Type": "Runtime",
+			"LoadingPhase": "PreLoadingScreen"
+		}
+	]
+}
