@@ -1,4 +1,4 @@
-// Some copyright should be here...
+// Copyright 2020 Andrew Bindraw. All Rights Reserved.
 
 using UnrealBuildTool;
 
