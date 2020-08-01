@@ -139,6 +139,13 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
 			DateTimeBuild,
 			DefaultGameIni
 		);
+
+		GConfig->SetText(
+			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			TEXT("ProjectVersionFormatAll"),
+			ProjectVersionFormatAll,
+			DefaultGameIni
+		);
 	}
 	else
 	{
@@ -188,6 +195,13 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
 			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
 			TEXT("DateTimeBuild"),
 			DateTimeBuild,
+			GGameIni
+		);
+
+		GConfig->GetText(
+			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			TEXT("ProjectVersionFormatAll"),
+			ProjectVersionFormatAll,
 			GGameIni
 		);
 	}
