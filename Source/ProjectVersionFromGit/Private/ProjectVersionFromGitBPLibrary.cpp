@@ -39,6 +39,19 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
 
 		TagNameArg = FString(TEXT("describe --tags ")) + OutStdOut.TrimStartAndEnd();
 		FPlatformProcess::ExecProcess(TEXT("git"), *TagNameArg, &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
+
+		const FRegexPattern myPattern(TEXT("([0-9]\\.[0-9]\\.[0-9])+"));
+		FRegexMatcher myMatcher(myPattern, OutStdOut);
+
+		if (myMatcher.FindNext())
+		{
+			int32 beginPos = myMatcher.GetMatchBeginning();
+			int32 endPos = myMatcher.GetMatchEnding();
+			UE_LOG(ProjectVersionFromGit, Log, TEXT("Regex git tag pos: %i %i"), beginPos, endPos);
+			OutStdOut = OutStdOut.Mid(beginPos, endPos - beginPos);
+		}
+		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- After regex git tag: %s"), *OutStdOut);
 
 		if (OutStdOut.IsEmpty())
 		{
