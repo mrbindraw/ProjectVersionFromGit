@@ -56,5 +56,8 @@ private:
 	static int32 Minor;
 	static int32 Patch;
 
+	static FString SectionName;
+	static FString VersionFileIni;
+
 	static FString GitStdOutput;
 };

@@ -13,6 +13,9 @@ int32 UProjectVersionFromGitBPLibrary::Major = 0;
 int32 UProjectVersionFromGitBPLibrary::Minor = 0;
 int32 UProjectVersionFromGitBPLibrary::Patch = 0;
 
+FString UProjectVersionFromGitBPLibrary::SectionName	= FString(TEXT("VersionInfo"));
+FString UProjectVersionFromGitBPLibrary::VersionFileIni	= FString(TEXT("Version.ini"));
+
 FString UProjectVersionFromGitBPLibrary::GitStdOutput = FString(TEXT(""));
 
 DEFINE_LOG_CATEGORY(ProjectVersionFromGit)
@@ -40,7 +43,7 @@ bool UProjectVersionFromGitBPLibrary::ExecProcess(const TCHAR* URL, const TCHAR*
 
 FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
 {
-	static const FString DefaultGameIni = FString::Printf(TEXT("%sDefaultGame.ini"), *FPaths::SourceConfigDir());
+	static const FString VersionFileIniPath = FString::Printf(TEXT("%s%s"), *FPaths::SourceConfigDir(), *VersionFileIni);
 
 	if (GEngine->IsEditor())
 	{
@@ -55,7 +58,7 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
 
 		TagNameArg = FString(TEXT("describe --tags ")) + OutStdOut.TrimStartAndEnd();
 		ExecProcess(TEXT("git"), *TagNameArg, &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
-		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
+		//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
 
 		const FRegexPattern myPattern(TEXT("([0-9]\\.[0-9]\\.[0-9])+"));
 		FRegexMatcher myMatcher(myPattern, OutStdOut);
@@ -67,7 +70,7 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
 			//UE_LOG(ProjectVersionFromGit, Log, TEXT("Regex git tag pos: %i %i"), beginPos, endPos);
 			OutStdOut = OutStdOut.Mid(beginPos, endPos - beginPos);
 		}
-		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- After regex git tag: %s"), *OutStdOut);
+		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
 
 		if (OutStdOut.IsEmpty())
 		{
@@ -104,121 +107,121 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
 
 		if (!GitStdOutput.IsEmpty())
 		{
-			UE_LOG(ProjectVersionFromGit, Warning, TEXT("-------- git status --short: %s"), *GitStdOutput);
+			UE_LOG(ProjectVersionFromGit, Warning, TEXT("-------- Git status --short: %s"), *GitStdOutput);
 		}
 
 		GConfig->SetText(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("ProjectVersion"),
 			ProjectVersion,
-			DefaultGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->SetInt(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("Major"),
 			Major,
-			DefaultGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->SetInt(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("Minor"),
 			Minor,
-			DefaultGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->SetInt(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("Patch"),
 			Patch,
-			DefaultGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->SetText(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("BranchName"),
 			BranchName,
-			DefaultGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->SetText(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("CommitHash"),
 			CommitHash,
-			DefaultGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->SetText(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("DateTimeBuild"),
 			DateTimeBuild,
-			DefaultGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->SetText(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("ProjectVersionFormatAll"),
 			ProjectVersionFormatAll,
-			DefaultGameIni
+			VersionFileIniPath
 		);
 	}
 	else
 	{
 		GConfig->GetText(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("ProjectVersion"),
 			ProjectVersion,
-			GGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->GetInt(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("Major"),
 			Major,
-			GGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->GetInt(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("Minor"),
 			Minor,
-			GGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->GetInt(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("Patch"),
 			Patch,
-			GGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->GetText(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("BranchName"),
 			BranchName,
-			GGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->GetText(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("CommitHash"),
 			CommitHash,
-			GGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->GetText(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("DateTimeBuild"),
 			DateTimeBuild,
-			GGameIni
+			VersionFileIniPath
 		);
 
 		GConfig->GetText(
-			TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+			*SectionName,
 			TEXT("ProjectVersionFormatAll"),
 			ProjectVersionFormatAll,
-			GGameIni
+			VersionFileIniPath
 		);
 	}
 
@@ -231,7 +234,7 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
 	UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- DateTimeBuild: %s"), *DateTimeBuild.ToString());
 	UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- ProjectVersionFormatAll: %s"), *ProjectVersionFormatAll.ToString());
 	//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- GGameIni: %s"), *GGameIni);
-	//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- DefaultGameIni: %s"), *DefaultGameIni);
+	//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- VersionFileIniPath: %s"), *VersionFileIniPath);
 
 	return ProjectVersion;
 }
