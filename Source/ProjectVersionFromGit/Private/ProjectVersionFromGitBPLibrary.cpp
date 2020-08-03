@@ -23,6 +23,21 @@ UProjectVersionFromGitBPLibrary::UProjectVersionFromGitBPLibrary(const FObjectIn
 	GetProjectVersion();
 }
 
+bool UProjectVersionFromGitBPLibrary::ExecProcess(const TCHAR* URL, const TCHAR* Params, int32* OutReturnCode, FString* OutStdOut, FString* OutStdErr, const TCHAR* OptionalWorkingDirectory)
+{
+	if (!GEngine->IsEditor())
+	{
+		return false;
+	}
+
+#if ENGINE_MINOR_VERSION >= 23
+	return FPlatformProcess::ExecProcess(URL, Params, OutReturnCode, OutStdOut, OutStdErr, OptionalWorkingDirectory);
+#else
+	const FString command = FString(URL) + FString(TEXT(" -C ")) + FString(OptionalWorkingDirectory);
+	return FPlatformProcess::ExecProcess(*command, Params, OutReturnCode, OutStdOut, OutStdErr);
+#endif
+}
+
 FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
 {
 	static const FString DefaultGameIni = FString::Printf(TEXT("%sDefaultGame.ini"), *FPaths::SourceConfigDir());
@@ -35,10 +50,11 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
 		static const FString OptionalWorkingDirectory = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
 
 		FString TagNameArg;
-		FPlatformProcess::ExecProcess(TEXT("git"), TEXT("rev-list --tags --max-count=1"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+
+		ExecProcess(TEXT("git"), TEXT("rev-list --tags --max-count=1"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 
 		TagNameArg = FString(TEXT("describe --tags ")) + OutStdOut.TrimStartAndEnd();
-		FPlatformProcess::ExecProcess(TEXT("git"), *TagNameArg, &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+		ExecProcess(TEXT("git"), *TagNameArg, &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
 
 		const FRegexPattern myPattern(TEXT("([0-9]\\.[0-9]\\.[0-9])+"));
@@ -48,7 +64,7 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
 		{
 			int32 beginPos = myMatcher.GetMatchBeginning();
 			int32 endPos = myMatcher.GetMatchEnding();
-			UE_LOG(ProjectVersionFromGit, Log, TEXT("Regex git tag pos: %i %i"), beginPos, endPos);
+			//UE_LOG(ProjectVersionFromGit, Log, TEXT("Regex git tag pos: %i %i"), beginPos, endPos);
 			OutStdOut = OutStdOut.Mid(beginPos, endPos - beginPos);
 		}
 		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- After regex git tag: %s"), *OutStdOut);
@@ -231,7 +247,7 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersionBranchName()
 
 		if (GEngine->IsEditor())
 		{
-			FPlatformProcess::ExecProcess(TEXT("git"), TEXT("symbolic-ref --short HEAD"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			ExecProcess(TEXT("git"), TEXT("symbolic-ref --short HEAD"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			if (OutStdOut.IsEmpty())
 			{
 				BranchName = FText::FromString(TEXT("unknown"));
@@ -255,12 +271,12 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersionCommitHash()
 		int32 OutReturnCode;
 		static const FString OptionalWorkingDirectory = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
 
-		FPlatformProcess::ExecProcess(TEXT("git"), TEXT("status --short"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+		ExecProcess(TEXT("git"), TEXT("status --short"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 		GitStdOutput = OutStdOut;
 
 		if (OutStdOut.IsEmpty())
 		{
-			FPlatformProcess::ExecProcess(TEXT("git"), TEXT("describe --always --abbrev=8"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			ExecProcess(TEXT("git"), TEXT("describe --always --abbrev=8"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			CommitHash = FText::FromString(OutStdOut.TrimStartAndEnd());
 		}
 		else
