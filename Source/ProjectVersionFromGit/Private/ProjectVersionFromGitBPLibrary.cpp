@@ -55,9 +55,11 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
 		FString TagNameArg;
 
 		ExecProcess(TEXT("git"), TEXT("rev-list --tags --max-count=1"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+		OutStdOut.TrimStartAndEndInline();
 
-		TagNameArg = FString(TEXT("describe --tags ")) + OutStdOut.TrimStartAndEnd();
+		TagNameArg = FString(TEXT("describe --tags ")) + OutStdOut;
 		ExecProcess(TEXT("git"), *TagNameArg, &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+		OutStdOut.TrimStartAndEndInline();
 		//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
 
 		const FRegexPattern myPattern(TEXT("([0-9]\\.[0-9]\\.[0-9])+"));
@@ -79,7 +81,7 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
 		}
 		else
 		{
-			OutStdOut = OutStdOut.TrimStartAndEnd();
+			OutStdOut.TrimStartAndEndInline();
 			TArray<FString> OutArrayParse;
 			OutStdOut.ParseIntoArrayWS(OutArrayParse, TEXT("."));
 
@@ -251,13 +253,15 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersionBranchName()
 		if (GEngine->IsEditor())
 		{
 			ExecProcess(TEXT("git"), TEXT("symbolic-ref --short HEAD"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			OutStdOut.TrimStartAndEndInline();
+
 			if (OutStdOut.IsEmpty())
 			{
 				BranchName = FText::FromString(TEXT("unknown"));
 			}
 			else
 			{
-				BranchName = FText::FromString(OutStdOut.TrimStartAndEnd());
+				BranchName = FText::FromString(OutStdOut);
 			}
 		}
 	}
@@ -275,16 +279,20 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersionCommitHash()
 		static const FString OptionalWorkingDirectory = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
 
 		ExecProcess(TEXT("git"), TEXT("status --short"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+		OutStdOut.TrimStartAndEndInline();
 		GitStdOutput = OutStdOut;
+		OutStdOut.Reset();
 
-		if (OutStdOut.IsEmpty())
+		ExecProcess(TEXT("git"), TEXT("describe --always --abbrev=8"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+		OutStdOut.TrimStartAndEndInline();
+		
+		if (GitStdOutput.IsEmpty())
 		{
-			ExecProcess(TEXT("git"), TEXT("describe --always --abbrev=8"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
-			CommitHash = FText::FromString(OutStdOut.TrimStartAndEnd());
+			CommitHash = FText::FromString(OutStdOut);
 		}
 		else
 		{
-			CommitHash = FText::FromString(TEXT("unknown"));
+			CommitHash = FText::FromString(FString(TEXT("unclean-")) + OutStdOut);
 		}
 	}
 
