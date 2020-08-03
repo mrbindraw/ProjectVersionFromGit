@@ -2,11 +2,15 @@
 
 #pragma once
 
+#include "Engine.h"
 #include "Misc/DateTime.h"
 #include "Misc/Paths.h"
+#include "Internationalization/Regex.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Misc/DefaultValueHelper.h"
 #include "Misc/ConfigCacheIni.h"
+#include "Misc/EngineVersion.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "ProjectVersionFromGitBPLibrary.generated.h"
@@ -40,6 +44,8 @@ class UProjectVersionFromGitBPLibrary : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintPure, Category = "ProjectVersionFromGit")
 	static FText GetProjectVersionFormatAll();
 
+	static bool ExecProcess(const TCHAR* URL, const TCHAR* Params, int32* OutReturnCode, FString* OutStdOut, FString* OutStdErr, const TCHAR* OptionalWorkingDirectory);
+
 private:
 	static FText ProjectVersion;
 	static FText ProjectVersionFormatAll;
@@ -49,6 +55,9 @@ private:
 	static int32 Major;
 	static int32 Minor;
 	static int32 Patch;
+
+	static FString SectionName;
+	static FString VersionFileIni;
 
 	static FString GitStdOutput;
 };
