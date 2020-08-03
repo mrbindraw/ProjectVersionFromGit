@@ -13,7 +13,7 @@ Set version for project from git tag format MAJOR.MINOR.PATCH also set branch na
 - GetProjectVersionFormatAll()
 
 **Supported engines:**
-- 4.23.1 - 4.25.3
+- 4.18 - 4.25
 
 **Supported platforms:**
 - Windows
