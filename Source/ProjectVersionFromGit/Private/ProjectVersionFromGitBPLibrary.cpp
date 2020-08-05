@@ -316,11 +316,15 @@ int32 UProjectVersionFromGitBPLibrary::GetProjectVersionPatch()
 
 FText UProjectVersionFromGitBPLibrary::GetProjectVersionDateTimeBuild()
 {
+	GetProjectVersion();
+
 	return DateTimeBuild;
 }
 
 FText UProjectVersionFromGitBPLibrary::GetProjectVersionFormatAll()
 {
+	GetProjectVersion();
+
 	return ProjectVersionFormatAll;
 }
 
