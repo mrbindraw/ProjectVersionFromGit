@@ -18,7 +18,10 @@
 		{
 			"Name": "ProjectVersionFromGit",
 			"Type": "Runtime",
-			"LoadingPhase": "PreLoadingScreen"
+			"LoadingPhase": "PreLoadingScreen",
+			"WhitelistPlatforms": [
+                "Win64"
+            ]
 		}
 	]
 }
