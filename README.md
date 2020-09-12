@@ -15,10 +15,3 @@ Set version for project from git tag format MAJOR.MINOR.PATCH also set branch na
 **Supported engines:**
 - 4.18 - 4.25
 
-**Supported platforms:**
-- Windows
-- Linux
-- MacOS
-- Android
-- IOS
-
