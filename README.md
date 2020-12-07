@@ -18,5 +18,5 @@ https://github.com/mrbindraw/ProjectVersionFromGit/releases into ROOT_UE4\Engine
 - GetProjectVersionFormatAll()
 
 **Supported engines:**
-- 4.18 - 4.25
+- 4.18 - 4.26
 
