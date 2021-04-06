@@ -11,9 +11,12 @@
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/EngineVersion.h"
 #include "Runtime/Launch/Resources/Version.h"
+//#include "Async/Async.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "ProjectVersionFromGitBPLibrary.generated.h"
+
+DECLARE_DYNAMIC_DELEGATE(FParseVersionDelegate);
 
 UCLASS()
 class UProjectVersionFromGitBPLibrary : public UBlueprintFunctionLibrary
@@ -43,6 +46,9 @@ class UProjectVersionFromGitBPLibrary : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintPure, Category = "ProjectVersionFromGit")
 	static FText GetProjectVersionFormatAll();
+
+	UFUNCTION(BlueprintCallable, Category = "ProjectVersionFromGit")
+	static void GetProjectVersionInfo(FParseVersionDelegate OnCompleted);
 
 	static bool ExecProcess(const TCHAR* URL, const TCHAR* Params, int32* OutReturnCode, FString* OutStdOut, FString* OutStdErr, const TCHAR* OptionalWorkingDirectory);
 

@@ -23,7 +23,7 @@ DEFINE_LOG_CATEGORY(ProjectVersionFromGit)
 UProjectVersionFromGitBPLibrary::UProjectVersionFromGitBPLibrary(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
-	GetProjectVersion();
+	GetProjectVersionInfo(FParseVersionDelegate());
 }
 
 bool UProjectVersionFromGitBPLibrary::ExecProcess(const TCHAR* URL, const TCHAR* Params, int32* OutReturnCode, FString* OutStdOut, FString* OutStdErr, const TCHAR* OptionalWorkingDirectory)
@@ -41,220 +41,72 @@ bool UProjectVersionFromGitBPLibrary::ExecProcess(const TCHAR* URL, const TCHAR*
 #endif
 }
 
-FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
+void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegate OnCompleted)
 {
-	static const FString VersionFileIniPath = FString::Printf(TEXT("%s%s"), *FPaths::SourceConfigDir(), *VersionFileIni);
-
-	if (GEngine->IsEditor())
+	AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [OnCompleted]()
 	{
-		FString OutStdOut;
-		FString OutStdErr;
-		int32 OutReturnCode;
-		static const FString OptionalWorkingDirectory = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
+		static const FString VersionFileIniPath = FString::Printf(TEXT("%s%s"), *FPaths::SourceConfigDir(), *VersionFileIni);
 
-		FString TagNameArg;
-
-		ExecProcess(TEXT("git"), TEXT("rev-list --tags --max-count=1"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
-		OutStdOut.TrimStartAndEndInline();
-
-		TagNameArg = FString(TEXT("describe --tags ")) + OutStdOut;
-		ExecProcess(TEXT("git"), *TagNameArg, &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
-		OutStdOut.TrimStartAndEndInline();
-		//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
-
-		const FRegexPattern myPattern(TEXT("([0-9]\\.[0-9]\\.[0-9])+"));
-		FRegexMatcher myMatcher(myPattern, OutStdOut);
-
-		if (myMatcher.FindNext())
+		if (GEngine->IsEditor())
 		{
-			int32 beginPos = myMatcher.GetMatchBeginning();
-			int32 endPos = myMatcher.GetMatchEnding();
-			//UE_LOG(ProjectVersionFromGit, Log, TEXT("Regex git tag pos: %i %i"), beginPos, endPos);
-			OutStdOut = OutStdOut.Mid(beginPos, endPos - beginPos);
-		}
-		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
+			FString OutStdOut;
+			FString OutStdErr;
+			int32 OutReturnCode;
+			static const FString OptionalWorkingDirectory = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
 
-		if (OutStdOut.IsEmpty())
-		{
-			ProjectVersion = FText::FromString(TEXT("0.0.0"));
-			Major = Minor = Patch = 0;
-		}
-		else
-		{
+			FString TagNameArg;
+
+			ExecProcess(TEXT("git"), TEXT("rev-list --tags --max-count=1"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
-			TArray<FString> OutArrayParse;
-			OutStdOut.ParseIntoArrayWS(OutArrayParse, TEXT("."));
 
-			if (OutArrayParse.Num() == 3)
+			TagNameArg = FString(TEXT("describe --tags ")) + OutStdOut;
+			ExecProcess(TEXT("git"), *TagNameArg, &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			OutStdOut.TrimStartAndEndInline();
+			//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
+
+			const FRegexPattern myPattern(TEXT("([0-9]\\.[0-9]\\.[0-9])+"));
+			FRegexMatcher myMatcher(myPattern, OutStdOut);
+
+			if (myMatcher.FindNext())
 			{
-				FDefaultValueHelper::ParseInt(OutArrayParse[0], Major);
-				FDefaultValueHelper::ParseInt(OutArrayParse[1], Minor);
-				FDefaultValueHelper::ParseInt(OutArrayParse[2], Patch);
-
-				ProjectVersion = FText::FromString(OutStdOut);
+				int32 beginPos = myMatcher.GetMatchBeginning();
+				int32 endPos = myMatcher.GetMatchEnding();
+				//UE_LOG(ProjectVersionFromGit, Log, TEXT("Regex git tag pos: %i %i"), beginPos, endPos);
+				OutStdOut = OutStdOut.Mid(beginPos, endPos - beginPos);
 			}
-			else
+			UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
+
+			if (OutStdOut.IsEmpty())
 			{
 				ProjectVersion = FText::FromString(TEXT("0.0.0"));
 				Major = Minor = Patch = 0;
 			}
-		}
+			else
+			{
+				OutStdOut.TrimStartAndEndInline();
+				TArray<FString> OutArrayParse;
+				OutStdOut.ParseIntoArrayWS(OutArrayParse, TEXT("."));
 
-		DateTimeBuild = FText::FromString(FDateTime::UtcNow().ToString() + TEXT("-UTC"));
+				if (OutArrayParse.Num() == 3)
+				{
+					FDefaultValueHelper::ParseInt(OutArrayParse[0], Major);
+					FDefaultValueHelper::ParseInt(OutArrayParse[1], Minor);
+					FDefaultValueHelper::ParseInt(OutArrayParse[2], Patch);
 
-		GetProjectVersionBranchName();
-		GetProjectVersionCommitHash();
+					ProjectVersion = FText::FromString(OutStdOut);
+				}
+				else
+				{
+					ProjectVersion = FText::FromString(TEXT("0.0.0"));
+					Major = Minor = Patch = 0;
+				}
+			}
+			OutStdOut = FString(TEXT(""));
 
-		ProjectVersionFormatAll = FText::Format(FText::FromString(TEXT("{0}-{1}-{2}-{3}")), ProjectVersion, BranchName, CommitHash, DateTimeBuild);
 
-		if (!GitStdOutput.IsEmpty())
-		{
-			UE_LOG(ProjectVersionFromGit, Warning, TEXT("-------- Git status --short: %s"), *GitStdOutput);
-		}
-
-		GConfig->SetText(
-			*SectionName,
-			TEXT("ProjectVersion"),
-			ProjectVersion,
-			VersionFileIniPath
-		);
-
-		GConfig->SetInt(
-			*SectionName,
-			TEXT("Major"),
-			Major,
-			VersionFileIniPath
-		);
-
-		GConfig->SetInt(
-			*SectionName,
-			TEXT("Minor"),
-			Minor,
-			VersionFileIniPath
-		);
-
-		GConfig->SetInt(
-			*SectionName,
-			TEXT("Patch"),
-			Patch,
-			VersionFileIniPath
-		);
-
-		GConfig->SetText(
-			*SectionName,
-			TEXT("BranchName"),
-			BranchName,
-			VersionFileIniPath
-		);
-
-		GConfig->SetText(
-			*SectionName,
-			TEXT("CommitHash"),
-			CommitHash,
-			VersionFileIniPath
-		);
-
-		GConfig->SetText(
-			*SectionName,
-			TEXT("DateTimeBuild"),
-			DateTimeBuild,
-			VersionFileIniPath
-		);
-
-		GConfig->SetText(
-			*SectionName,
-			TEXT("ProjectVersionFormatAll"),
-			ProjectVersionFormatAll,
-			VersionFileIniPath
-		);
-	}
-	else
-	{
-		GConfig->GetText(
-			*SectionName,
-			TEXT("ProjectVersion"),
-			ProjectVersion,
-			VersionFileIniPath
-		);
-
-		GConfig->GetInt(
-			*SectionName,
-			TEXT("Major"),
-			Major,
-			VersionFileIniPath
-		);
-
-		GConfig->GetInt(
-			*SectionName,
-			TEXT("Minor"),
-			Minor,
-			VersionFileIniPath
-		);
-
-		GConfig->GetInt(
-			*SectionName,
-			TEXT("Patch"),
-			Patch,
-			VersionFileIniPath
-		);
-
-		GConfig->GetText(
-			*SectionName,
-			TEXT("BranchName"),
-			BranchName,
-			VersionFileIniPath
-		);
-
-		GConfig->GetText(
-			*SectionName,
-			TEXT("CommitHash"),
-			CommitHash,
-			VersionFileIniPath
-		);
-
-		GConfig->GetText(
-			*SectionName,
-			TEXT("DateTimeBuild"),
-			DateTimeBuild,
-			VersionFileIniPath
-		);
-
-		GConfig->GetText(
-			*SectionName,
-			TEXT("ProjectVersionFormatAll"),
-			ProjectVersionFormatAll,
-			VersionFileIniPath
-		);
-	}
-
-	UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- ProjectVersion: %s"), *ProjectVersion.ToString());
-	UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Major: %d"), Major);
-	UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Minor: %d"), Minor);
-	UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Patch: %d"), Patch);
-	UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- BranchName: %s"), *BranchName.ToString());
-	UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- CommitHash: %s"), *CommitHash.ToString());
-	UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- DateTimeBuild: %s"), *DateTimeBuild.ToString());
-	UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- ProjectVersionFormatAll: %s"), *ProjectVersionFormatAll.ToString());
-	//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- GGameIni: %s"), *GGameIni);
-	//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- VersionFileIniPath: %s"), *VersionFileIniPath);
-
-	return ProjectVersion;
-}
-
-FText UProjectVersionFromGitBPLibrary::GetProjectVersionBranchName()
-{
-	if (GEngine->IsEditor())
-	{
-		FString OutStdOut;
-		FString OutStdErr;
-		int32 OutReturnCode;
-		static const FString OptionalWorkingDirectory = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
-
-		if (GEngine->IsEditor())
-		{
+			// Get BranchName
 			ExecProcess(TEXT("git"), TEXT("symbolic-ref --short HEAD"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
-
 			if (OutStdOut.IsEmpty())
 			{
 				BranchName = FText::FromString(TEXT("unknown"));
@@ -263,39 +115,183 @@ FText UProjectVersionFromGitBPLibrary::GetProjectVersionBranchName()
 			{
 				BranchName = FText::FromString(OutStdOut);
 			}
-		}
-	}
+			OutStdOut = FString(TEXT(""));
 
+			// Get CommitHash
+			ExecProcess(TEXT("git"), TEXT("status --short"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			OutStdOut.TrimStartAndEndInline();
+			GitStdOutput = OutStdOut;
+			OutStdOut.Reset();
+
+			ExecProcess(TEXT("git"), TEXT("describe --always --abbrev=8"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			OutStdOut.TrimStartAndEndInline();
+				
+			if (GitStdOutput.IsEmpty())
+			{
+				CommitHash = FText::FromString(OutStdOut);
+			}
+			else
+			{
+				CommitHash = FText::FromString(FString(TEXT("unclean-")) + OutStdOut);
+			}
+			OutStdOut = FString(TEXT(""));
+
+
+			DateTimeBuild = FText::FromString(FDateTime::UtcNow().ToString() + TEXT("-UTC"));
+
+			ProjectVersionFormatAll = FText::Format(FText::FromString(TEXT("{0}-{1}-{2}-{3}")), ProjectVersion, BranchName, CommitHash, DateTimeBuild);
+
+			if (!GitStdOutput.IsEmpty())
+			{
+				UE_LOG(ProjectVersionFromGit, Warning, TEXT("-------- Git status --short: %s"), *GitStdOutput);
+			}
+
+			GConfig->SetText(
+				*SectionName,
+				TEXT("ProjectVersion"),
+				ProjectVersion,
+				VersionFileIniPath
+			);
+
+			GConfig->SetInt(
+				*SectionName,
+				TEXT("Major"),
+				Major,
+				VersionFileIniPath
+			);
+
+			GConfig->SetInt(
+				*SectionName,
+				TEXT("Minor"),
+				Minor,
+				VersionFileIniPath
+			);
+
+			GConfig->SetInt(
+				*SectionName,
+				TEXT("Patch"),
+				Patch,
+				VersionFileIniPath
+			);
+
+			GConfig->SetText(
+				*SectionName,
+				TEXT("BranchName"),
+				BranchName,
+				VersionFileIniPath
+			);
+
+			GConfig->SetText(
+				*SectionName,
+				TEXT("CommitHash"),
+				CommitHash,
+				VersionFileIniPath
+			);
+
+			GConfig->SetText(
+				*SectionName,
+				TEXT("DateTimeBuild"),
+				DateTimeBuild,
+				VersionFileIniPath
+			);
+
+			GConfig->SetText(
+				*SectionName,
+				TEXT("ProjectVersionFormatAll"),
+				ProjectVersionFormatAll,
+				VersionFileIniPath
+			);
+		}
+		else
+		{
+			GConfig->GetText(
+				*SectionName,
+				TEXT("ProjectVersion"),
+				ProjectVersion,
+				VersionFileIniPath
+			);
+
+			GConfig->GetInt(
+				*SectionName,
+				TEXT("Major"),
+				Major,
+				VersionFileIniPath
+			);
+
+			GConfig->GetInt(
+				*SectionName,
+				TEXT("Minor"),
+				Minor,
+				VersionFileIniPath
+			);
+
+			GConfig->GetInt(
+				*SectionName,
+				TEXT("Patch"),
+				Patch,
+				VersionFileIniPath
+			);
+
+			GConfig->GetText(
+				*SectionName,
+				TEXT("BranchName"),
+				BranchName,
+				VersionFileIniPath
+			);
+
+			GConfig->GetText(
+				*SectionName,
+				TEXT("CommitHash"),
+				CommitHash,
+				VersionFileIniPath
+			);
+
+			GConfig->GetText(
+				*SectionName,
+				TEXT("DateTimeBuild"),
+				DateTimeBuild,
+				VersionFileIniPath
+			);
+
+			GConfig->GetText(
+				*SectionName,
+				TEXT("ProjectVersionFormatAll"),
+				ProjectVersionFormatAll,
+				VersionFileIniPath
+			);
+		}
+
+#if PLATFORM_WINDOWS
+		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- ProjectVersion: %s"), *ProjectVersion.ToString());
+		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Major: %d"), Major);
+		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Minor: %d"), Minor);
+		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Patch: %d"), Patch);
+		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- BranchName: %s"), *BranchName.ToString());
+		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- CommitHash: %s"), *CommitHash.ToString());
+		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- DateTimeBuild: %s"), *DateTimeBuild.ToString());
+		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- ProjectVersionFormatAll: %s"), *ProjectVersionFormatAll.ToString());
+		//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- GGameIni: %s"), *GGameIni);
+		//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- VersionFileIniPath: %s"), *VersionFileIniPath);
+#endif
+		AsyncTask(ENamedThreads::GameThread, [OnCompleted]()
+		{
+			OnCompleted.ExecuteIfBound();
+		});
+	});
+}
+
+FText UProjectVersionFromGitBPLibrary::GetProjectVersion()
+{
+	return ProjectVersion;
+}
+
+FText UProjectVersionFromGitBPLibrary::GetProjectVersionBranchName()
+{
 	return BranchName;
 }
 
 FText UProjectVersionFromGitBPLibrary::GetProjectVersionCommitHash()
 {
-	if (GEngine->IsEditor())
-	{
-		FString OutStdOut;
-		FString OutStdErr;
-		int32 OutReturnCode;
-		static const FString OptionalWorkingDirectory = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
-
-		ExecProcess(TEXT("git"), TEXT("status --short"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
-		OutStdOut.TrimStartAndEndInline();
-		GitStdOutput = OutStdOut;
-		OutStdOut.Reset();
-
-		ExecProcess(TEXT("git"), TEXT("describe --always --abbrev=8"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
-		OutStdOut.TrimStartAndEndInline();
-		
-		if (GitStdOutput.IsEmpty())
-		{
-			CommitHash = FText::FromString(OutStdOut);
-		}
-		else
-		{
-			CommitHash = FText::FromString(FString(TEXT("unclean-")) + OutStdOut);
-		}
-	}
-
 	return CommitHash;
 }
 
@@ -316,15 +312,10 @@ int32 UProjectVersionFromGitBPLibrary::GetProjectVersionPatch()
 
 FText UProjectVersionFromGitBPLibrary::GetProjectVersionDateTimeBuild()
 {
-	GetProjectVersion();
-
 	return DateTimeBuild;
 }
 
 FText UProjectVersionFromGitBPLibrary::GetProjectVersionFormatAll()
 {
-	GetProjectVersion();
-
 	return ProjectVersionFormatAll;
 }
-
