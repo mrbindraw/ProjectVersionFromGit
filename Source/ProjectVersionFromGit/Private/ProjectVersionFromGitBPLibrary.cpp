@@ -33,7 +33,7 @@ bool UProjectVersionFromGitBPLibrary::ExecProcess(const TCHAR* URL, const TCHAR*
 		return false;
 	}
 
-#if ENGINE_MINOR_VERSION >= 23
+#if (ENGINE_MAJOR_VERSION > 4 || ENGINE_MINOR_VERSION >= 23)
 	return FPlatformProcess::ExecProcess(URL, Params, OutReturnCode, OutStdOut, OutStdErr, OptionalWorkingDirectory);
 #else
 	const FString command = FString(URL) + FString(TEXT(" -C ")) + FString(OptionalWorkingDirectory);
