@@ -10,7 +10,7 @@
 	"DocsURL": "https://github.com/mrbindraw/ProjectVersionFromGit/blob/master/README.md",
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/59246af04cae4760be3934baebaef588",
 	"SupportURL": "mailto:mrbindraw@gmail.com",
-	"EngineVersion": "4.18.0",
+	"EngineVersion": "5.0.0",
 	"CanContainContent": false,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
@@ -21,8 +21,8 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"WhitelistPlatforms": [
-                "Win64"
-            ]
+				"Win64"
+			]
 		}
 	]
 }
