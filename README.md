@@ -1,5 +1,5 @@
 # ProjectVersionFromGit
-Plugin for UE4 project.  
+Plugin for UE4/5 project.  
 Set version for project from git tag format MAJOR.MINOR.PATCH also set branch name, commit hash and datetime build.
 
 # Install
@@ -18,5 +18,5 @@ https://github.com/mrbindraw/ProjectVersionFromGit/releases into ROOT_UE4\Engine
 - GetProjectVersionFormatAll()
 
 **Supported engines:**
-- 4.18 - 4.26
+- 4.18 - 5.0
 
