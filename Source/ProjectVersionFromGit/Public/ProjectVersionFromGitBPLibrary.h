@@ -19,7 +19,7 @@
 DECLARE_DYNAMIC_DELEGATE(FParseVersionDelegate);
 
 UCLASS()
-class UProjectVersionFromGitBPLibrary : public UBlueprintFunctionLibrary
+class PROJECTVERSIONFROMGIT_API UProjectVersionFromGitBPLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_UCLASS_BODY()
 
