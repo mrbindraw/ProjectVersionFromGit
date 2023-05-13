@@ -15,13 +15,18 @@
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
+  	"SupportedTargetPlatforms": [
+		"Win64",
+		"Android"
+	],
 	"Modules": [
 		{
 			"Name": "ProjectVersionFromGit",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"WhitelistPlatforms": [
-				"Win64"
+				"Win64",
+				"Android"
 			]
 		}
 	]
