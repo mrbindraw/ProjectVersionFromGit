@@ -45,7 +45,7 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 {
 	AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [OnCompleted]()
 	{
-		static const FString VersionFileIniPath = FString::Printf(TEXT("%s%s"), *FPaths::SourceConfigDir(), *VersionFileIni);
+		static const FString VersionFileIniPath = FConfigCacheIni::NormalizeConfigIniPath(FString::Printf(TEXT("%s%s"), *FPaths::SourceConfigDir(), *VersionFileIni));
 
 		if (GEngine->IsEditor())
 		{
