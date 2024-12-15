@@ -10,7 +10,6 @@
 	"DocsURL": "https://github.com/mrbindraw/ProjectVersionFromGit/blob/master/README.md",
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/59246af04cae4760be3934baebaef588",
 	"SupportURL": "mailto:mrbindraw@gmail.com",
-	"EngineVersion": "5.1.0",
 	"CanContainContent": false,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
