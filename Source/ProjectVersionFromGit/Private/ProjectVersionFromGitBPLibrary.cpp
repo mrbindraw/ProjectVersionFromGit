@@ -145,6 +145,12 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 			{
 				UE_LOG(ProjectVersionFromGit, Warning, TEXT("-------- Git status --short: %s"), *GitStdOutput);
 			}
+			
+			if (!GConfig->Find(VersionFileIniPath))
+			{
+				FConfigFile ConfigFile;
+				GConfig->SetFile(VersionFileIniPath, &ConfigFile);
+			}
 
 			GConfig->SetText(
 				*SectionName,
