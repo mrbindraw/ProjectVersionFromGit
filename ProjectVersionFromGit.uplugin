@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
-	"Version": 3,
-	"VersionName": "2.2.0",
+	"Version": 4,
+	"VersionName": "2.2.1",
 	"FriendlyName": "ProjectVersionFromGit",
 	"Description": "Set version for project from git tag format MAJOR.MINOR.PATCH also set branch name, commit hash and datetime build",
 	"Category": "Source Control",
