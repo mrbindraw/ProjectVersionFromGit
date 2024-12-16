@@ -2,11 +2,6 @@
 Plugin for UE4/5 project.  
 Set version for project from git tag format MAJOR.MINOR.PATCH also set branch name, commit hash and datetime build.
 
-# Install
-https://www.unrealengine.com/marketplace/en-US/product/projectversionfromgit  
-or manual unzip ProjectVersionFromGit-X.X.X-build-win64-ueX.XX.X.zip from
-https://github.com/mrbindraw/ProjectVersionFromGit/releases into ROOT_UE4\Engine\Plugins.
-
 **C++/Blueprints functions:**
 - GetProjectVersion()
 - GetProjectVersionMajor()
@@ -17,6 +12,8 @@ https://github.com/mrbindraw/ProjectVersionFromGit/releases into ROOT_UE4\Engine
 - GetProjectVersionDateTimeBuild()
 - GetProjectVersionFormatAll()
 
-**Supported engines:**
-- 4.18 - 5.0
-
+# Install 
+You can install manually by extracting archive (ProjectVersionFromGit-X.X.X-...zip) from
+[Releases](https://github.com/mrbindraw/ProjectVersionFromGit/releases) to your project plugins folder  
+or build example project (ExamplePrj-UEX.X-ProjectVersionFromGit-X.X.X.zip).  
+You can install it from the marketplace [ProjectVersionFromGit](https://www.fab.com/listings/044c4f9a-eedc-487b-a973-c1c940470373)
