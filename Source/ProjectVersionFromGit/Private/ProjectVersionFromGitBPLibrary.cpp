@@ -53,10 +53,13 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 // More info about git path: 
 // Engine/Plugins/Developer/GitSourceControl/Source/GitSourceControl/Private/GitSourceControlUtils.cpp#L170
 // FString FindGitBinaryPath()
+// Open terminal: > 
+// whereis git
+// which -a git
 #if PLATFORM_WINDOWS
-            const FString GitPath = TEXT("git.exe");
+            const FString GitBinPath = TEXT("git.exe");
 #else
-            const FString GitPath = TEXT("/usr/bin/git");
+            const FString GitBinPath = TEXT("/usr/bin/git");
 #endif
 
 			FString OutStdOut;
@@ -66,11 +69,11 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 
 			FString TagNameArg;
 
-			ExecProcess(*GitPath, TEXT("rev-list --tags --max-count=1"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			ExecProcess(*GitBinPath, TEXT("rev-list --tags --max-count=1"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
 
 			TagNameArg = FString(TEXT("describe --tags ")) + OutStdOut;
-			ExecProcess(*GitPath, *TagNameArg, &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			ExecProcess(*GitBinPath, *TagNameArg, &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
 			//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
 
@@ -115,7 +118,7 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 
 
 			// Get BranchName
-			ExecProcess(*GitPath, TEXT("symbolic-ref --short HEAD"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			ExecProcess(*GitBinPath, TEXT("symbolic-ref --short HEAD"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
 			if (OutStdOut.IsEmpty())
 			{
@@ -128,12 +131,12 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 			OutStdOut = FString(TEXT(""));
 
 			// Get CommitHash
-			ExecProcess(*GitPath, TEXT("status --short"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			ExecProcess(*GitBinPath, TEXT("status --short"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
 			GitStdOutput = OutStdOut;
 			OutStdOut.Reset();
 
-			ExecProcess(*GitPath, TEXT("describe --always --abbrev=8"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			ExecProcess(*GitBinPath, TEXT("describe --always --abbrev=8"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
 				
 			if (GitStdOutput.IsEmpty())
