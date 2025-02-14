@@ -17,6 +17,8 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "ProjectVersionFromGitBPLibrary.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogProjectVersionFromGitBPLibrary, Log, All);
+
 DECLARE_DYNAMIC_DELEGATE(FParseVersionDelegate);
 
 UCLASS()
