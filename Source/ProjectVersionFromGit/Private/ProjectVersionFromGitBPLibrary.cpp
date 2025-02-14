@@ -267,7 +267,6 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 			);
 		}
 
-#if PLATFORM_WINDOWS
 		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- ProjectVersion: %s"), *ProjectVersion.ToString());
 		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- Major: %d"), Major);
 		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- Minor: %d"), Minor);
@@ -277,7 +276,7 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- DateTimeBuild: %s"), *DateTimeBuild.ToString());
 		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- ProjectVersionFormatAll: %s"), *ProjectVersionFormatAll.ToString());
 		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- VersionFileIniPath: %s"), *VersionFileIniPath);
-#endif
+
 		AsyncTask(ENamedThreads::GameThread, [OnCompleted]()
 		{
 			OnCompleted.ExecuteIfBound();
