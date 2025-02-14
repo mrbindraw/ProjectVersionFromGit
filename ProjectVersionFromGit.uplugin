@@ -14,18 +14,12 @@
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
-  	"SupportedTargetPlatforms": [
-		"Win64",
-		"Android",
-		"Mac",
-		"Linux"
-	],
 	"Modules": [
 		{
 			"Name": "ProjectVersionFromGit",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
-			"WhitelistPlatforms": [
+			"PlatformAllowList": [
 				"Win64",
 				"Android",
 				"Mac",
