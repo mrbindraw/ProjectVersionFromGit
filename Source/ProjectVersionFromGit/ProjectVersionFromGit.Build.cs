@@ -49,5 +49,11 @@ public class ProjectVersionFromGit : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
+
+        if (Target.Type == TargetType.Editor)
+        {
+            DynamicallyLoadedModuleNames.Add("Settings");
+            PrivateIncludePathModuleNames.Add("Settings");
+        }
 	}
 }
