@@ -11,6 +11,7 @@
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/EngineVersion.h"
 #include "Runtime/Launch/Resources/Version.h"
+#include "ProjectVersionGitSettings.h"
 #include "Async/Async.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
