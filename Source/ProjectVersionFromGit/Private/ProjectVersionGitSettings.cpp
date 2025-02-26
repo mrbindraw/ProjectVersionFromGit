@@ -5,7 +5,10 @@
 DEFINE_LOG_CATEGORY(LogProjectVersionGitSettings)
 
 FPostInitPropertiesDelegate UProjectVersionGitSettings::OnPostInitPropertiesCompleted;
+
+#if WITH_EDITOR
 FPostEditChangePropertyDelegate UProjectVersionGitSettings::OnPostEditChangePropertyCompleted;
+#endif
 
 UProjectVersionGitSettings::UProjectVersionGitSettings(const FObjectInitializer& ObjectInitializer):
     Super(ObjectInitializer)
