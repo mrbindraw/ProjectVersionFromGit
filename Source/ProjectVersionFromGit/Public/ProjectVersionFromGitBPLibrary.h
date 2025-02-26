@@ -26,6 +26,9 @@ class PROJECTVERSIONFROMGIT_API UProjectVersionFromGitBPLibrary : public UBluepr
 {
 	GENERATED_UCLASS_BODY()
 
+public:
+	virtual void PostInitProperties() override;
+
 	UFUNCTION(BlueprintPure, Category = "ProjectVersionFromGit")
 	static FText GetProjectVersion();
 

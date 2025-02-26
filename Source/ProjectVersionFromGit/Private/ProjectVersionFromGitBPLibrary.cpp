@@ -22,7 +22,24 @@ DEFINE_LOG_CATEGORY(LogProjectVersionFromGitBPLibrary)
 UProjectVersionFromGitBPLibrary::UProjectVersionFromGitBPLibrary(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
-	GetProjectVersionInfo(FParseVersionDelegate());
+	
+}
+
+void UProjectVersionFromGitBPLibrary::PostInitProperties()
+{
+	Super::PostInitProperties();
+
+	UProjectVersionGitSettings::OnPostInitPropertiesCompleted.AddLambda([]() 
+		{ 
+			GetProjectVersionInfo(FParseVersionDelegate()); 
+		});
+
+#if WITH_EDITOR
+	UProjectVersionGitSettings::OnPostEditChangePropertyCompleted.AddLambda([]() 
+		{ 
+			GetProjectVersionInfo(FParseVersionDelegate()); 
+		});
+#endif
 }
 
 bool UProjectVersionFromGitBPLibrary::ExecProcess(const TCHAR* URL, const TCHAR* Params, int32* OutReturnCode, FString* OutStdOut, FString* OutStdErr, const TCHAR* OptionalWorkingDirectory)
@@ -56,6 +73,8 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 			static const FString OptionalWorkingDirectory = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
 
 			FString TagNameArg;
+
+			UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- Cfg->GitBinPath: %s"), *Cfg->GitBinPath);
 
 			ExecProcess(*Cfg->GitBinPath, TEXT("rev-list --tags --max-count=1"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
