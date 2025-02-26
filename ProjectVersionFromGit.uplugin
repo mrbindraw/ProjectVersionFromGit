@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
-	"Version": 5,
-	"VersionName": "2.2.3",
+	"Version": 6,
+	"VersionName": "2.5.0",
 	"FriendlyName": "ProjectVersionFromGit",
 	"Description": "Set version for project from git tag format MAJOR.MINOR.PATCH also set branch name, commit hash and datetime build",
 	"Category": "Source Control",
@@ -14,18 +14,17 @@
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
-  	"SupportedTargetPlatforms": [
-		"Win64",
-		"Android"
-	],
 	"Modules": [
 		{
 			"Name": "ProjectVersionFromGit",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
-			"WhitelistPlatforms": [
+			"PlatformAllowList": [
 				"Win64",
-				"Android"
+				"Android",
+				"Mac",
+				"IOS",
+				"Linux"
 			]
 		}
 	]

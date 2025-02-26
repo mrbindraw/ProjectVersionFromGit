@@ -1,7 +1,6 @@
-// Copyright 2024 Andrew Bindraw. All Rights Reserved.
+// Copyright 2025 Andrew Bindraw. All Rights Reserved.
 
 #include "ProjectVersionFromGitBPLibrary.h"
-#include "ProjectVersionFromGit.h"
 
 FText UProjectVersionFromGitBPLibrary::ProjectVersion 			= FText::GetEmpty();
 FText UProjectVersionFromGitBPLibrary::ProjectVersionFormatAll 	= FText::GetEmpty();
@@ -18,12 +17,29 @@ FString UProjectVersionFromGitBPLibrary::VersionFileIni	= FString(TEXT("Version.
 
 FString UProjectVersionFromGitBPLibrary::GitStdOutput = FString(TEXT(""));
 
-DEFINE_LOG_CATEGORY(ProjectVersionFromGit)
+DEFINE_LOG_CATEGORY(LogProjectVersionFromGitBPLibrary)
 
 UProjectVersionFromGitBPLibrary::UProjectVersionFromGitBPLibrary(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
-	GetProjectVersionInfo(FParseVersionDelegate());
+	
+}
+
+void UProjectVersionFromGitBPLibrary::PostInitProperties()
+{
+	Super::PostInitProperties();
+
+	UProjectVersionGitSettings::OnPostInitPropertiesCompleted.AddLambda([]() 
+		{ 
+			GetProjectVersionInfo(FParseVersionDelegate()); 
+		});
+
+#if WITH_EDITOR
+	UProjectVersionGitSettings::OnPostEditChangePropertyCompleted.AddLambda([]() 
+		{ 
+			GetProjectVersionInfo(FParseVersionDelegate()); 
+		});
+#endif
 }
 
 bool UProjectVersionFromGitBPLibrary::ExecProcess(const TCHAR* URL, const TCHAR* Params, int32* OutReturnCode, FString* OutStdOut, FString* OutStdErr, const TCHAR* OptionalWorkingDirectory)
@@ -49,6 +65,8 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 
 		if (GEngine->IsEditor())
 		{
+            const auto Cfg = GetMutableDefault<UProjectVersionGitSettings>();
+            
 			FString OutStdOut;
 			FString OutStdErr;
 			int32 OutReturnCode;
@@ -56,13 +74,15 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 
 			FString TagNameArg;
 
-			ExecProcess(TEXT("git"), TEXT("rev-list --tags --max-count=1"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- Cfg->GitBinPath: %s"), *Cfg->GitBinPath);
+
+			ExecProcess(*Cfg->GitBinPath, TEXT("rev-list --tags --max-count=1"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
 
 			TagNameArg = FString(TEXT("describe --tags ")) + OutStdOut;
-			ExecProcess(TEXT("git"), *TagNameArg, &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			ExecProcess(*Cfg->GitBinPath, *TagNameArg, &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
-			//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
+			//UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
 
 			const FRegexPattern myPattern(TEXT("([0-9]\\.[0-9]\\.[0-9])+"));
 			FRegexMatcher myMatcher(myPattern, OutStdOut);
@@ -71,10 +91,10 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 			{
 				int32 beginPos = myMatcher.GetMatchBeginning();
 				int32 endPos = myMatcher.GetMatchEnding();
-				//UE_LOG(ProjectVersionFromGit, Log, TEXT("Regex git tag pos: %i %i"), beginPos, endPos);
+				//UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("Regex git tag pos: %i %i"), beginPos, endPos);
 				OutStdOut = OutStdOut.Mid(beginPos, endPos - beginPos);
 			}
-			UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
+			UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
 
 			if (OutStdOut.IsEmpty())
 			{
@@ -105,7 +125,7 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 
 
 			// Get BranchName
-			ExecProcess(TEXT("git"), TEXT("symbolic-ref --short HEAD"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			ExecProcess(*Cfg->GitBinPath, TEXT("symbolic-ref --short HEAD"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
 			if (OutStdOut.IsEmpty())
 			{
@@ -118,12 +138,12 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 			OutStdOut = FString(TEXT(""));
 
 			// Get CommitHash
-			ExecProcess(TEXT("git"), TEXT("status --short"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			ExecProcess(*Cfg->GitBinPath, TEXT("status --short"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
 			GitStdOutput = OutStdOut;
 			OutStdOut.Reset();
 
-			ExecProcess(TEXT("git"), TEXT("describe --always --abbrev=8"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			ExecProcess(*Cfg->GitBinPath, TEXT("describe --always --abbrev=8"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
 				
 			if (GitStdOutput.IsEmpty())
@@ -143,7 +163,7 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 
 			if (!GitStdOutput.IsEmpty())
 			{
-				UE_LOG(ProjectVersionFromGit, Warning, TEXT("-------- Git status --short: %s"), *GitStdOutput);
+				UE_LOG(LogProjectVersionFromGitBPLibrary, Warning, TEXT("-------- Git status --short: %s"), *GitStdOutput);
 			}
 			
 			FConfigFile ConfigFile;
@@ -266,18 +286,16 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 			);
 		}
 
-#if PLATFORM_WINDOWS
-		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- ProjectVersion: %s"), *ProjectVersion.ToString());
-		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Major: %d"), Major);
-		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Minor: %d"), Minor);
-		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- Patch: %d"), Patch);
-		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- BranchName: %s"), *BranchName.ToString());
-		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- CommitHash: %s"), *CommitHash.ToString());
-		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- DateTimeBuild: %s"), *DateTimeBuild.ToString());
-		UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- ProjectVersionFormatAll: %s"), *ProjectVersionFormatAll.ToString());
-		//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- GGameIni: %s"), *GGameIni);
-		//UE_LOG(ProjectVersionFromGit, Log, TEXT("-------- VersionFileIniPath: %s"), *VersionFileIniPath);
-#endif
+		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- ProjectVersion: %s"), *ProjectVersion.ToString());
+		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- Major: %d"), Major);
+		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- Minor: %d"), Minor);
+		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- Patch: %d"), Patch);
+		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- BranchName: %s"), *BranchName.ToString());
+		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- CommitHash: %s"), *CommitHash.ToString());
+		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- DateTimeBuild: %s"), *DateTimeBuild.ToString());
+		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- ProjectVersionFormatAll: %s"), *ProjectVersionFormatAll.ToString());
+		UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- VersionFileIniPath: %s"), *VersionFileIniPath);
+
 		AsyncTask(ENamedThreads::GameThread, [OnCompleted]()
 		{
 			OnCompleted.ExecuteIfBound();

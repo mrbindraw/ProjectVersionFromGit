@@ -1,4 +1,4 @@
-// Copyright 2024 Andrew Bindraw. All Rights Reserved.
+// Copyright 2025 Andrew Bindraw. All Rights Reserved.
 
 using UnrealBuildTool;
 
@@ -49,5 +49,11 @@ public class ProjectVersionFromGit : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
+
+        if (Target.Type == TargetType.Editor)
+        {
+            DynamicallyLoadedModuleNames.Add("Settings");
+            PrivateIncludePathModuleNames.Add("Settings");
+        }
 	}
 }

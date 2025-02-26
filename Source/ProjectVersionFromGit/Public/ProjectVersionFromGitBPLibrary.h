@@ -1,4 +1,4 @@
-// Copyright 2024 Andrew Bindraw. All Rights Reserved.
+// Copyright 2025 Andrew Bindraw. All Rights Reserved.
 
 #pragma once
 
@@ -11,10 +11,13 @@
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/EngineVersion.h"
 #include "Runtime/Launch/Resources/Version.h"
+#include "ProjectVersionGitSettings.h"
 #include "Async/Async.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "ProjectVersionFromGitBPLibrary.generated.h"
+
+DECLARE_LOG_CATEGORY_EXTERN(LogProjectVersionFromGitBPLibrary, Log, All);
 
 DECLARE_DYNAMIC_DELEGATE(FParseVersionDelegate);
 
@@ -22,6 +25,9 @@ UCLASS()
 class PROJECTVERSIONFROMGIT_API UProjectVersionFromGitBPLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_UCLASS_BODY()
+
+public:
+	virtual void PostInitProperties() override;
 
 	UFUNCTION(BlueprintPure, Category = "ProjectVersionFromGit")
 	static FText GetProjectVersion();
