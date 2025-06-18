@@ -76,11 +76,7 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 
 			UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- Cfg->GitBinPath: %s"), *Cfg->GitBinPath);
 
-			ExecProcess(*Cfg->GitBinPath, TEXT("rev-list --tags --max-count=1"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
-			OutStdOut.TrimStartAndEndInline();
-
-			TagNameArg = FString(TEXT("describe --tags ")) + OutStdOut;
-			ExecProcess(*Cfg->GitBinPath, *TagNameArg, &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
+			ExecProcess(*Cfg->GitBinPath, TEXT("describe --tags --abbrev=0"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
 			OutStdOut.TrimStartAndEndInline();
 			//UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
 
