@@ -72,8 +72,6 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 			int32 OutReturnCode;
 			static const FString OptionalWorkingDirectory = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
 
-			FString TagNameArg;
-
 			UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- Cfg->GitBinPath: %s"), *Cfg->GitBinPath);
 
 			ExecProcess(*Cfg->GitBinPath, TEXT("describe --tags --abbrev=0"), &OutReturnCode, &OutStdOut, &OutStdErr, *OptionalWorkingDirectory);
