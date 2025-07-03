@@ -80,7 +80,7 @@ void UProjectVersionFromGitBPLibrary::GetProjectVersionInfo(FParseVersionDelegat
 			OutStdOut.TrimStartAndEndInline();
 			//UE_LOG(LogProjectVersionFromGitBPLibrary, Log, TEXT("-------- Git tag: %s"), *OutStdOut);
 
-			const FRegexPattern myPattern(TEXT("([0-9]\\.[0-9]\\.[0-9])+"));
+			const FRegexPattern myPattern(TEXT("([0-9]+\\.[0-9]+\\.[0-9]+)+"));
 			FRegexMatcher myMatcher(myPattern, OutStdOut);
 
 			if (myMatcher.FindNext())
